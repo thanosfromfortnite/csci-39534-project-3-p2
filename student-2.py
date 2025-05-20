@@ -52,6 +52,14 @@ def adaptive_local_thresholding(image, k=0.5, window_size=7):
                 out_pxl[i,j] = 255
     return out
 
+'''
+    Contrast Enhancements
+'''
+
+
+'''
+    Main
+'''
 # Find every image file name in a dir
 start_time = time.time()
 image_file_names = os.listdir(image_dir)
@@ -59,9 +67,10 @@ image_file_names = os.listdir(image_dir)
 # Apply the filters and thresholding to each image
 for image_file_name in image_file_names:
     image = Image.open(f"{image_dir}/{image_file_name}")
-
-    alt_image = adaptive_local_thresholding(image)
+    
+    alt_image = adaptive_local_thresholding(image, 0.7)
     alt_image.save(f"{output_dir}/ALT_{image_file_name}")
     alt_image.close()
     image.close()
+    print(f"{image_file_name} done!")
 print(f"Process took: {time.time() - start_time} seconds.")
