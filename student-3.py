@@ -9,6 +9,8 @@
 import os
 import cv2
 import numpy as np
+import math
+import matplotlib.pyplot as plt
 
 def preprocess_image(image):
     # Gaussian
@@ -49,6 +51,14 @@ def preprocess_image(image):
 
     return filtered
 
+def calculate_psnr(original, processed):
+    mse = np.mean((original.astype(np.float64) - processed.astype(np.float64)) ** 2)
+    if mse == 0:
+        return float('inf')
+    PIXEL_MAX = 255.0
+    psnr = 20 * math.log10(PIXEL_MAX / math.sqrt(mse))
+    return psnr
+
 def sauvola_thresholding(image, k, R, window_size):
     rows, cols = image.shape
     half_w = window_size // 2
@@ -77,12 +87,11 @@ def sauvola_thresholding(image, k, R, window_size):
 def main():
     image_dir = "images/grayscale"
     output_dir = "student-3"
+    os.makedirs(output_dir, exist_ok=True)
 
     k = 0.1
     R = 128
     window_size = 7
-
-    os.makedirs(output_dir, exist_ok=True)
 
     for filename in os.listdir(image_dir):
         if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff')):
@@ -96,9 +105,13 @@ def main():
             preprocessed_img = preprocess_image(image)
             binary_img = sauvola_thresholding(preprocessed_img, k, R, window_size)
 
-            out_path = f"{output_dir}/ST_{filename}"
+            psnr_value = calculate_psnr(image, binary_img)
+            print(f"PSNR for {filename}: {psnr_value:.2f} dB")
+
+            '''
+            out_path = os.path.join(output_dir, f"ST_{filename}")
             cv2.imwrite(out_path, binary_img)
-            print(f"Processed and saved: {out_path}")
+            '''
 
     print("Processing completed for all images.")
 
