@@ -159,10 +159,7 @@ def applyOtsuThresholding(img: Image.Image):
     # Return boolean mask
     return Image.fromarray(segmented_image).convert("L")
 
-path = "images/grayscale"
-save_path = "student-1"
-
-def testPreprocessing():
+def testPreprocessing(path: str):
     print("----Noise Removal Filters (PSNR)----")
     print("File | Median | Gauss  | Alpha")
 
@@ -177,7 +174,6 @@ def testPreprocessing():
         print('{:^8.2f}'.format(calculatePsnr(image, alpha)))
 
         # Uncomment to display images
-
         """
         plt.figure(filename + " noise removal")
         plt.subplot(2, 2, 1)
@@ -220,31 +216,106 @@ def testPreprocessing():
         plt.title("Histogram Equalization")
         """
 
-# Uncomment below to test various preprocessing filters and enhancements
-# testPreprocessing()
+def studentOne(path: str, save_path: str):
+    for filename in os.listdir(path):
+        image = Image.open(path + "/" + filename)
+        # Preprocessing step 1: Apply median filter with 3x3 window size
+        st1 = applyMedianFilter(image, (3, 3))
+        # Preprocessing step 2: Apply linear contrast stretching
+        st2 = applyLinearContrastStretching(st1)
+        # Preprocessing step 3: Apply sobel edge detection
+        st3 = applySobelOperator(st2)
+        # Apply Otsu thresholding technique
+        st4 = applyOtsuThresholding(st3)
+        # Save image to path
+        st4.save(save_path + "/" + filename)
 
-for filename in os.listdir(path):
-    image = Image.open(path + "/" + filename)
-    # Preprocessing step 1: Apply median filter with 3x3 window size
-    st1 = applyMedianFilter(image, (3, 3))
-    # Preprocessing step 2: Apply linear contrast stretching
-    st2 = applyLinearContrastStretching(st1)
-    # Preprocessing step 3: Apply sobel edge detection
-    st3 = applySobelOperator(st2)
-    # Apply Otsu thresholding technique
-    st4 = applyOtsuThresholding(st3)
-    # Save image to path
-    st4.save(save_path + "/" + filename)
+        # Uncomment to display images
+        """
+        plt.figure(filename)
+        plt.subplot(1, 2, 1)
+        plt.imshow(image, cmap='gray')
+        plt.title("Original Image")
+        plt.subplot(1, 2, 2)
+        plt.imshow(st4, cmap='gray')
+        plt.title("Enhanced Image")
+        """
 
-    # Uncomment to display images
-    """
-    plt.figure(filename)
-    plt.subplot(1, 2, 1)
-    plt.imshow(image, cmap='gray')
-    plt.title("Original Image")
-    plt.subplot(1, 2, 2)
-    plt.imshow(st4, cmap='gray')
-    plt.title("Enhanced Image")
-    """
+def studentOnePartTwo(source: str, otsu: str, adapt: str, sauvola: str):
+    files = {}
+    for filename in os.listdir(source):
+        image = Image.open(source + "/" + filename)
+        name = filename.split("_")[0]
+        arr = []
+        arr.append(image)
+        files[name] = arr
+  
+    for filename in os.listdir(otsu):
+        image = Image.open(otsu + "/" + filename)
+        name = filename.split("_")[0]
+        files[name].append(image)
 
-plt.show()
+    for filename in os.listdir(adapt):
+        image = Image.open(adapt + "/" + filename)
+        name = filename.split("_")[1]
+        files[name].append(image)
+
+    for filename in os.listdir(sauvola):
+        image = Image.open(sauvola + "/" + filename)
+        name = filename.split("_")[1]
+        files[name].append(image)
+
+    print("File |  Otsu  | Adapt  | Sauvola")
+    for img_name, img_list in files.items():
+        otsu_img = img_list[1]
+        adapt_img = img_list[2]
+        sauvola_img = img_list[3]
+
+        otsu_psnr = calculatePsnr(img_list[0], otsu_img)
+        adapt_psnr = calculatePsnr(img_list[0], adapt_img)
+        sauvola_psnr = calculatePsnr(img_list[0], sauvola_img)
+
+        print('{:^5s}'.format(img_name), end="|")
+        print('{:^8.2f}'.format(otsu_psnr), end="|")
+        print('{:^8.2f}'.format(adapt_psnr), end="|")
+        print('{:^8.2f}'.format(sauvola_psnr))
+
+        plt.figure(img_name)
+        plt.subplot(2, 2, 1)
+        plt.imshow(img_list[0], cmap='gray')
+        plt.title("Original Image")
+
+        plt.subplot(2, 2, 2)
+        plt.imshow(otsu_img, cmap='gray')
+        plt.title("Otsu Thresholding")
+
+        plt.subplot(2, 2, 3)
+        plt.imshow(adapt_img, cmap='gray')
+        plt.title("Adaptive Local Thresholding")
+
+        plt.subplot(2, 2, 4)
+        plt.imshow(sauvola_img, cmap='gray')
+        plt.title("Sauvola's Adaptive Thresholding")
+
+        # End here, comparing own preprocessing + other thresholding techniques
+        # Possibly test own preprocessing + otsu thresholding and compare it to other
+        #   preprocessing & thresholding techniques
+
+def main():
+    source_path = "images/grayscale"
+    output_path = "student-1"
+    adapt_path = "student-2"
+    sauvola_path = "student-3"
+
+    # Uncomment below to test various preprocessing filters and enhancements
+    #testPreprocessing(source_path)
+
+    # Uncomment below to run student 1 processing steps
+    #studentOne(source_path, output_path)
+
+    studentOnePartTwo(source_path, output_path, adapt_path, sauvola_path)
+
+    plt.show()
+
+if __name__ == "__main__":
+    main()
